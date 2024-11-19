@@ -1,35 +1,46 @@
 import os
-import psycopg2
+from flask_sqlalchemy import SQLAlchemy
+from psycopg2 import connect, OperationalError
+from flask import jsonify, Response
 
 # Load the environment variable
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('DATABASE_URL')  # Example: "postgresql://user:password@host/dbname"
 
-def get_db_connection():
-    """Establishes a connection to the database."""
+# Initialize SQLAlchemy
+db = SQLAlchemy()
+
+def init_db(app):
+    """Initialize SQLAlchemy with the Flask app."""
+    print("DATABASE URL", DATABASE_URL)
+    # app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://scorer_owner:UNH20pdPxADc@ep-billowing-thunder-a196hpgj.ap-southeast-1.aws.neon.tech/scorer?sslmode=require"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    print("SQLAlchemy connected successfully.")
+
+def get_raw_connection():
+    """Establish a raw connection to the PostgreSQL database using psycopg2."""
     try:
-        # Connect to the PostgreSQL database
-        conn = psycopg2.connect(DATABASE_URL)
-        print("Database connection established.")
+        conn = connect(DATABASE_URL)
+        print("Raw database connection established successfully.")
         return conn
-    except Exception as e:
+    except OperationalError as e:
         print(f"Error connecting to the database: {e}")
         return None
 
-def test_connection():
-    """Tests the database connection by retrieving the version."""
-    print("Test Connection")
-    conn = get_db_connection()
+def test_raw_connection():
+    """Test the raw database connection and return a Flask response."""
+    conn = get_raw_connection()
     if conn:
-        return conn
-     #    try:
-     #        with conn.cursor() as cur:
-     #            cur.execute("SELECT version()")
-     #            print(f"Database version: {cur.fetchone()}")
-     #    except Exception as e:
-     #        print(f"Error during query execution: {e}")
-     #    finally:
-     #        conn.close()
-     #        print("Connection closed.")
-
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT version();")
+                db_version = cur.fetchone()
+                return jsonify({"status": "success", "message": f"Database version: {db_version}"})
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Error during query execution: {str(e)}"}), 500
+        finally:
+            conn.close()
+            print("Raw connection closed.")
     else:
-        print("Failed to connect to the database.")
+        return jsonify({"status": "error", "message": "Failed to connect to the database."}), 500

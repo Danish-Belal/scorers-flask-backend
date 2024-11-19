@@ -1,23 +1,18 @@
 from flask import Flask, request
-# from flask_cors import CORS
+from config import  init_db, db, test_raw_connection
 
-from config import get_db_connection,test_connection
+# from config import get_db_connection,test_connection
 def create_app():
-     print("GOnna Create APp")
+     print("Create App function")
      app = app = Flask(__name__)
      
-     test_connection()
+     init_db(app)
+    
 
      @app.route('/test')
-     def texting():
-          conn = get_db_connection()
-          if conn:
-               return "Connection DOne"
-          else :
-               return "Some Issue Occured"
-
-
-          
+     def test_route():
+        return test_raw_connection()
+     
      return app
 
 
@@ -26,19 +21,5 @@ app = create_app()
 
 @app.route('/')
 def home():
-     print("Goin to check connection")
-     conn = test_connection()
-     print(conn)
-     return f'Text Connection done'
-
-@app.route('/home')
-def routess():
-     return f'Home is Returned'
-
-@app.route("/connection")
-def connections():
-     print("Goin to check connection")
-     conn = test_connection()
-     print(conn)
-     return f'Text Connection done'
+    return test_raw_connection()
 
