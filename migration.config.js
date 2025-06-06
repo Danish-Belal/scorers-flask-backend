@@ -5,4 +5,5 @@ module.exports = {
   dir: 'migrations',
   direction: 'up',
   databaseUrl: process.env.DATABASE_URL,
+  migrationFileExtension: '.js', // this handles `.js` extension
 };
