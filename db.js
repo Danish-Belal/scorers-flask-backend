@@ -19,6 +19,6 @@ async function testConnection() {
 }
 
 // Run on load
-// testConnection();
+testConnection();
 
 module.exports = pool;
